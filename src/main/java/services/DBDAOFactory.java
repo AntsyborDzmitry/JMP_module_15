@@ -1,13 +1,14 @@
 package services;
 
-import services.DAOImpl.DBConnectionDAOSQLImpl;
+
 import services.DAO.DBConnectionDAO;
+import services.DAO.DBConnectionDAOMongoImpl;
 
 
 public class DBDAOFactory {
     public DBDAOFactory() {
     }
     public DBConnectionDAO getDAO () {
-        return new DBConnectionDAOSQLImpl();
+        return new DBConnectionDAOMongoImpl();
     }
 }

@@ -1,8 +1,7 @@
 package services.DAO;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import com.mongodb.MongoClient;
 
 public interface DBConnectionDAO {
-    Connection  getConnection() throws SQLException, ClassNotFoundException;
+    MongoClient getConnection() ;
 }
