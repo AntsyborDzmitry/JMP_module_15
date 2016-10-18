@@ -1,34 +1,31 @@
 package beans;
 
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class FriendShip {
-    private User firstUser ;
-    private User secondUser ;
-    private LocalDateTime timestamp ;
 
-    public User getFirstUser() {
-        return firstUser;
+    private String friend ;
+    private LocalDate timestamp ;
+
+    public FriendShip(String friend, LocalDate timestamp) {
+        this.friend = friend;
+        this.timestamp = timestamp;
     }
 
-    public void setFirstUser(User firstUser) {
-        this.firstUser = firstUser;
+    public String getFriend() {
+        return friend;
     }
 
-    public User getSecondUser() {
-        return secondUser;
+    public void setFriend(String friend) {
+        this.friend = friend;
     }
 
-    public void setSecondUser(User secondUser) {
-        this.secondUser = secondUser;
-    }
-
-    public LocalDateTime getTimestamp() {
+    public LocalDate getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(LocalDate timestamp) {
         this.timestamp = timestamp;
     }
 }

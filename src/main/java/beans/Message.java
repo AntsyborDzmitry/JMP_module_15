@@ -1,20 +1,20 @@
 package beans;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class Message {
 
-    private  long messageId ;
     private String message ;
-    private LocalDateTime timestamp ;
+    private LocalDate timestamp ;
 
-
-    public long getMessageId() {
-        return messageId;
+    public Message(String message) {
+        this.message = message;
+        this.timestamp = LocalDate.now();
     }
 
-    public void setMessageId(long messageId) {
-        this.messageId = messageId;
+    public Message(String message, LocalDate timestamp) {
+        this.message = message;
+        this.timestamp = timestamp;
     }
 
     public String getMessage() {
@@ -25,11 +25,11 @@ public class Message {
         this.message = message;
     }
 
-    public LocalDateTime getTimestamp() {
+    public LocalDate getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(LocalDate timestamp) {
         this.timestamp = timestamp;
     }
 }
