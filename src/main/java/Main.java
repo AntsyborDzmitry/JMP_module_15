@@ -42,39 +42,110 @@ public class Main {
         MongoTableInitService.createAndFillMessageTable(messageColl, messages);
         MongoTableInitService.createAndFillFriendShipTable(friendShipColl, friends);
 
+        System.out.println("********************************* task 1 *********************************");
+        System.out.println("*               Average number of messages by day of week                *");
+        System.out.println("**************************************************************************");
+        System.out.println();
+        System.out.println("------------- quantity of messages by day of weeks------------------------");
+
             Document d = new Document("_id", new Document("dayOfWeek", new Document("$dayOfWeek", "$date")));
             d.put("countOfMessages", new Document( "$sum", 1));
 
 
-        Document s = new Document("dayOfWeek", 1);
+        Document s = new Document("_id.dayOfWeek", 1);
         AggregateIterable<Document> output = messageColl.aggregate(Arrays.asList(
-            new Document("$group", d),
+                new Document("$group", d),
                 new Document("$sort", s)
+
         ));
 
         for (Document doc : output) {
-           System.out.println(doc);
+           System.out.println(doc + "            |");
         }
+        System.out.println("--------------------------------------------------------------------------");
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println("********************************* task 2 *********************************");
+        System.out.println("*            Max number of new friendships from month to month           *");
+        System.out.println("**************************************************************************");
+        System.out.println();
+        System.out.println("----- quantity of new friendships  by month from input range ------------");
+
+        Document dd3 = new Document("_id", new Document("month", new Document("$month", "$date")));
+        dd3.put("countOfFriendShips",new Document( "$sum", 1));
+        //dd.put("min",new Document("$min", "$month"));
+
+        Document ss = new Document("_id.month", 1);
+
+        Document range =new Document("$gt", java.sql.Date.valueOf(LocalDate.of(2016, 5, 1)));
+        range.put("$lt", java.sql.Date.valueOf(LocalDate.of(2016, 8, 25)));
+        Document mm3 =new Document("date", range);
+
+        AggregateIterable<Document> output3 = friendShipColl.aggregate(Arrays.asList(
+                new Document("$match",mm3),
+                new Document("$group", dd3),
+                new Document("$sort", ss)
+
+        ));
+
+        for (Document doc : output3) {
+            System.out.println(doc + "             |");
+        }
+
+
+
+
+
+        System.out.println("--------------------------------------------------------------------------");
+        System.out.println();
+
+
+
+
+        System.out.println("------------------------max friendships count-----------------------------");
 
         Document dd = new Document("_id", new Document("month", new Document("$month", "$date")));
         dd.put("countOfFriendShips",new Document( "$sum", 1));
         //dd.put("min",new Document("$min", "$month"));
 
-        Document range =new Document("$gt", java.sql.Date.valueOf(LocalDate.of(2016, 7, 1)));
-        range.put("$lt", java.sql.Date.valueOf(LocalDate.of(2016, 8, 25)));
-        Document mm =new Document("date", range);
+        Document ss2 = new Document("countOfFriendShips", 1);
+
+        //Document dd2 = new Document("_id", new Document("max", new Document("$max", "$countOfFriendShips")));
+        Document dd2 = new Document("_id","max friendships");
+        dd2.put("max",new Document("$max", "$countOfFriendShips"));
+
+
+
+
+        Document range2 =new Document("$gt", java.sql.Date.valueOf(LocalDate.of(2016, 5, 1)));
+        range2.put("$lt", java.sql.Date.valueOf(LocalDate.of(2016, 8, 25)));
+        Document mm =new Document("date", range2);
 
         AggregateIterable<Document> output1 = friendShipColl.aggregate(Arrays.asList(
                     new Document("$match",mm),
-                    new Document("$group", dd)
+                    new Document("$group", dd),
+                    new Document("$sort", ss2),
+                    new Document("$group", dd2)
                 ));
 
                 for (Document doc : output1) {
-                    System.out.println(doc);
+                    System.out.println(doc + "                                 |");
                 }
+        System.out.println("--------------------------------------------------------------------------");
+        System.out.println();
+        System.out.println();
+        System.out.println();
 
 
 
+
+
+        System.out.println("********************************* task 3 *********************************");
+        System.out.println("*   Min number of watched movies by users with more than 100 friends     *");
+        System.out.println("**************************************************************************");
+        System.out.println();
+        System.out.println("--- Min number of watched movies by users with more than 100 friends -----");
         Document ddd = new Document("_id",1);
         ddd.put("min",new Document("$min", "$viewedMovies"));
 
@@ -88,8 +159,9 @@ public class Main {
                       ));
 
                       for (Document doc : output2) {
-                          System.out.println(doc);
+                          System.out.println(doc + "                                                 |");
                       }
+        System.out.println("--------------------------------------------------------------------------");
     }
 
 
