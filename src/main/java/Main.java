@@ -5,9 +5,10 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import services.CollectionInitService;
-import services.DAO.DBConnectionDAO;
-import services.DBDAOFactory;
+import services.DBConnectionMongoImpl;
 import services.MongoTableInitService;
+import services.QueryService;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,8 +19,8 @@ public class Main {
 
     public static void main(String[] args) {
 
-        DBConnectionDAO connectionDAO = new DBDAOFactory().getDAO();
-        MongoClient connection = connectionDAO.getConnection();
+
+        MongoClient connection = DBConnectionMongoImpl.getConnection();
         MongoDatabase db = connection.getDatabase( "mySocialDB" );
 
         MongoCollection<Document> userColl = db.getCollection("user");
@@ -28,19 +29,30 @@ public class Main {
         MongoCollection<Document> messageColl = db.getCollection("messages");
         MongoCollection<Document> friendShipColl = db.getCollection("friendShip");
 
+        /**
+         * preparing data for table
+         **/
+        int capacity = 1_000;
+        int trackNameLength = 15;
+        int movieNameLength = 7;
+        int userNameLength = 5;
 
-        List<Track> tracks = CollectionInitService.initTrackCollection(new ArrayList<Track>(1_000), 15, 1_000);
-        List<Movie> movies = CollectionInitService.initMovieCollection(new ArrayList<Movie>(1_000), 5, 1_000);
-        List<User> users = CollectionInitService.initUserCollection(new ArrayList<User>(1_000), 7, 1_000);
-        List<Message> messages = CollectionInitService.initMessageCollection(new ArrayList<Message>(10_000), users);
-        List<FriendShip> friends = CollectionInitService.initFriendShipCollection(new ArrayList<FriendShip>(10_000), users);
+        List<Track> tracks = CollectionInitService.initTrackCollection(new ArrayList<Track>(capacity), trackNameLength, capacity);
+        List<Movie> movies = CollectionInitService.initMovieCollection(new ArrayList<Movie>(capacity), movieNameLength, capacity);
+        List<User> users = CollectionInitService.initUserCollection(new ArrayList<User>(capacity), userNameLength, capacity);
+        List<Message> messages = CollectionInitService.initMessageCollection(new ArrayList<Message>(2_000), users);
+        List<FriendShip> friends = CollectionInitService.initFriendShipCollection(new ArrayList<FriendShip>(2_000), users);
 
-
+        /**
+         * inserting data into table
+         **/
         MongoTableInitService.createAndFillTrackTable(trackColl, tracks);
         MongoTableInitService.createAndFillMovieTable(movieColl, movies);
         MongoTableInitService.createAndFillUserTable(userColl, users, movies, tracks);
         MongoTableInitService.createAndFillMessageTable(messageColl, messages);
         MongoTableInitService.createAndFillFriendShipTable(friendShipColl, friends);
+
+
 
         System.out.println("********************************* task 1 *********************************");
         System.out.println("*               Average number of messages by day of week                *");
@@ -48,18 +60,9 @@ public class Main {
         System.out.println();
         System.out.println("------------- quantity of messages by day of weeks------------------------");
 
-            Document d = new Document("_id", new Document("dayOfWeek", new Document("$dayOfWeek", "$date")));
-            d.put("countOfMessages", new Document( "$sum", 1));
+        AggregateIterable<Document> output1 = QueryService.getMessageQuantityByDayOfWeek(messageColl);
 
-
-        Document s = new Document("_id.dayOfWeek", 1);
-        AggregateIterable<Document> output = messageColl.aggregate(Arrays.asList(
-                new Document("$group", d),
-                new Document("$sort", s)
-
-        ));
-
-        for (Document doc : output) {
+        for (Document doc : output1) {
            System.out.println(doc + "            |");
         }
         System.out.println("--------------------------------------------------------------------------");
@@ -72,30 +75,14 @@ public class Main {
         System.out.println();
         System.out.println("----- quantity of new friendships  by month from input range ------------");
 
-        Document dd3 = new Document("_id", new Document("month", new Document("$month", "$date")));
-        dd3.put("countOfFriendShips",new Document( "$sum", 1));
-        //dd.put("min",new Document("$min", "$month"));
+        LocalDate from = LocalDate.of(2016, 5, 1);
+        LocalDate to = LocalDate.of(2016, 8, 25);
 
-        Document ss = new Document("_id.month", 1);
+        AggregateIterable<Document> output2 = QueryService.getListMaxNumberOfFriendShipsByMonthRange(friendShipColl, from, to);
 
-        Document range =new Document("$gt", java.sql.Date.valueOf(LocalDate.of(2016, 5, 1)));
-        range.put("$lt", java.sql.Date.valueOf(LocalDate.of(2016, 8, 25)));
-        Document mm3 =new Document("date", range);
-
-        AggregateIterable<Document> output3 = friendShipColl.aggregate(Arrays.asList(
-                new Document("$match",mm3),
-                new Document("$group", dd3),
-                new Document("$sort", ss)
-
-        ));
-
-        for (Document doc : output3) {
+        for (Document doc : output2) {
             System.out.println(doc + "             |");
         }
-
-
-
-
 
         System.out.println("--------------------------------------------------------------------------");
         System.out.println();
@@ -105,39 +92,16 @@ public class Main {
 
         System.out.println("------------------------max friendships count-----------------------------");
 
-        Document dd = new Document("_id", new Document("month", new Document("$month", "$date")));
-        dd.put("countOfFriendShips",new Document( "$sum", 1));
-        //dd.put("min",new Document("$min", "$month"));
-
-        Document ss2 = new Document("countOfFriendShips", 1);
-
-        //Document dd2 = new Document("_id", new Document("max", new Document("$max", "$countOfFriendShips")));
-        Document dd2 = new Document("_id","max friendships");
-        dd2.put("max",new Document("$max", "$countOfFriendShips"));
+        AggregateIterable<Document> output3 = QueryService.getMaxNumberOfFriendShipsByMonthRange(friendShipColl, from, to);
 
 
-
-
-        Document range2 =new Document("$gt", java.sql.Date.valueOf(LocalDate.of(2016, 5, 1)));
-        range2.put("$lt", java.sql.Date.valueOf(LocalDate.of(2016, 8, 25)));
-        Document mm =new Document("date", range2);
-
-        AggregateIterable<Document> output1 = friendShipColl.aggregate(Arrays.asList(
-                    new Document("$match",mm),
-                    new Document("$group", dd),
-                    new Document("$sort", ss2),
-                    new Document("$group", dd2)
-                ));
-
-                for (Document doc : output1) {
-                    System.out.println(doc + "                                 |");
-                }
+        for (Document doc : output3) {
+            System.out.println(doc + "                                 |");
+        }
         System.out.println("--------------------------------------------------------------------------");
         System.out.println();
         System.out.println();
         System.out.println();
-
-
 
 
 
@@ -146,21 +110,15 @@ public class Main {
         System.out.println("**************************************************************************");
         System.out.println();
         System.out.println("--- Min number of watched movies by users with more than 100 friends -----");
-        Document ddd = new Document("_id",1);
-        ddd.put("min",new Document("$min", "$viewedMovies"));
 
-        Document range1 =new Document("$gt", 10 );
-        Document mmm =new Document("friendsCount", range1);
+        int minNumberFriends = 10;
+
+        AggregateIterable<Document> output4 = QueryService.getMinNumberViewedMoviesForUserWithNUmberOfFriends(userColl, minNumberFriends);
 
 
-        AggregateIterable<Document> output2 = userColl.aggregate(Arrays.asList(
-                          new Document("$match",mmm),
-                          new Document("$group", ddd)
-                      ));
-
-                      for (Document doc : output2) {
-                          System.out.println(doc + "                                                 |");
-                      }
+        for (Document doc : output4) {
+          System.out.println(doc + "                                                 |");
+        }
         System.out.println("--------------------------------------------------------------------------");
     }
 

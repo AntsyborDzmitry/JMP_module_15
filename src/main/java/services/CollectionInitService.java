@@ -83,7 +83,8 @@ public class CollectionInitService {
     public static List<Movie> initMovieCollection (List<Movie> coll, int wordLength, long capacity) {
        Movie m ;
        for (int i=0 ; i <= capacity; i++){
-           m = new Movie(RandomStringUtils.randomAlphanumeric(wordLength), r.nextInt(100));
+           int likes = r.nextInt(100);
+           m = new Movie(RandomStringUtils.randomAlphanumeric(wordLength), likes);
            coll.add(m);
        }
        return coll;
@@ -92,7 +93,8 @@ public class CollectionInitService {
     public static List<Track> initTrackCollection (List<Track> coll, int wordLength, long capacity) {
        Track t ;
        for (int i=0 ; i <= capacity; i++){
-           t = new Track(RandomStringUtils.randomAlphanumeric(wordLength), r.nextInt(100));
+           int likes = r.nextInt(100);
+           t = new Track(RandomStringUtils.randomAlphanumeric(wordLength),likes );
            coll.add(t);
        }
        return coll;
