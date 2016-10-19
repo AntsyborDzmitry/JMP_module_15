@@ -1,10 +1,8 @@
 package services;
 
-
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
-
 import java.time.LocalDate;
 import java.util.Arrays;
 
@@ -62,13 +60,10 @@ public class QueryService {
         Document sortFields = new Document("countOfFriendShips", 1);
         Document sortBy = new Document("$sort", sortFields);
 
-
         Document groupFields_2 = new Document("_id","max_friendships");
         groupFields_2.put("max",new Document("$max", "$countOfFriendShips"));
 
         Document groupBy_2 = new Document("$group", groupFields_2);
-
-
 
         AggregateIterable<Document> output = friendShipColl.aggregate(Arrays.asList( matchBy, groupBy_1, sortBy , groupBy_2 ));
 

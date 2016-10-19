@@ -8,10 +8,8 @@ import services.CollectionInitService;
 import services.DBConnectionMongoImpl;
 import services.MongoTableInitService;
 import services.QueryService;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Main {
@@ -32,7 +30,7 @@ public class Main {
         /**
          * preparing data for table
          **/
-        int capacity = 1_000;
+        int capacity = 1_0000;
         int trackNameLength = 15;
         int movieNameLength = 7;
         int userNameLength = 5;
@@ -40,8 +38,8 @@ public class Main {
         List<Track> tracks = CollectionInitService.initTrackCollection(new ArrayList<Track>(capacity), trackNameLength, capacity);
         List<Movie> movies = CollectionInitService.initMovieCollection(new ArrayList<Movie>(capacity), movieNameLength, capacity);
         List<User> users = CollectionInitService.initUserCollection(new ArrayList<User>(capacity), userNameLength, capacity);
-        List<Message> messages = CollectionInitService.initMessageCollection(new ArrayList<Message>(2_000), users);
-        List<FriendShip> friends = CollectionInitService.initFriendShipCollection(new ArrayList<FriendShip>(2_000), users);
+        List<Message> messages = CollectionInitService.initMessageCollection(new ArrayList<Message>(2_0000), users);
+        List<FriendShip> friends = CollectionInitService.initFriendShipCollection(new ArrayList<FriendShip>(2_0000), users);
 
         /**
          * inserting data into table
@@ -88,8 +86,6 @@ public class Main {
         System.out.println();
 
 
-
-
         System.out.println("------------------------max friendships count-----------------------------");
 
         AggregateIterable<Document> output3 = QueryService.getMaxNumberOfFriendShipsByMonthRange(friendShipColl, from, to);
@@ -110,6 +106,7 @@ public class Main {
         System.out.println("**************************************************************************");
         System.out.println();
         System.out.println("--- Min number of watched movies by users with more than 100 friends -----");
+        System.out.println("---   min viewed movies field - has random value from 5 to 505       -----");
 
         int minNumberFriends = 10;
 
@@ -117,11 +114,8 @@ public class Main {
 
 
         for (Document doc : output4) {
-          System.out.println(doc + "                                                 |");
+          System.out.println(doc + "                                   |");
         }
         System.out.println("--------------------------------------------------------------------------");
     }
-
-
-
 }
