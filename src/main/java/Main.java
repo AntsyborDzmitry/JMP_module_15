@@ -1,21 +1,20 @@
 import beans.*;
 import com.mongodb.*;
-import com.mongodb.client.FindIterable;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.apache.commons.lang.RandomStringUtils;
 import org.bson.Document;
+import services.CollectionInitService;
 import services.DAO.DBConnectionDAO;
 import services.DBDAOFactory;
-
+import services.MongoTableInitService;
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 public class Main {
-    private static Random r = new Random();
+
 
     public static void main(String[] args) {
 
@@ -26,194 +25,73 @@ public class Main {
         MongoCollection<Document> userColl = db.getCollection("user");
         MongoCollection<Document> movieColl = db.getCollection("movie");
         MongoCollection<Document> trackColl = db.getCollection("track");
+        MongoCollection<Document> messageColl = db.getCollection("messages");
         MongoCollection<Document> friendShipColl = db.getCollection("friendShip");
 
 
-        int index = r.nextInt(1_000_000);
+        List<Track> tracks = CollectionInitService.initTrackCollection(new ArrayList<Track>(1_000), 15, 1_000);
+        List<Movie> movies = CollectionInitService.initMovieCollection(new ArrayList<Movie>(1_000), 5, 1_000);
+        List<User> users = CollectionInitService.initUserCollection(new ArrayList<User>(1_000), 7, 1_000);
+        List<Message> messages = CollectionInitService.initMessageCollection(new ArrayList<Message>(10_000), users);
+        List<FriendShip> friends = CollectionInitService.initFriendShipCollection(new ArrayList<FriendShip>(10_000), users);
 
-        List<Track> tracks = initTrackCollection(new ArrayList<Track>(1_000), 15, 1_000);
-        List<Movie> movies = initMovieCollection(new ArrayList<Movie>(1_000), 5, 1_000);
-        List<User> users = initUserCollection(new ArrayList<User>(1_000), 7, 1_000);
 
-        createAndFillTrackTable(trackColl, tracks);
-        createAndFillMovieTable(movieColl, movies);
-        createAndFillUserTable(userColl, users, movies, tracks);
+        MongoTableInitService.createAndFillTrackTable(trackColl, tracks);
+        MongoTableInitService.createAndFillMovieTable(movieColl, movies);
+        MongoTableInitService.createAndFillUserTable(userColl, users, movies, tracks);
+        MongoTableInitService.createAndFillMessageTable(messageColl, messages);
+        MongoTableInitService.createAndFillFriendShipTable(friendShipColl, friends);
 
-        /*names.forEach(
-                (name)->{
-                    System.out.println("name -> " + name);
+            Document d = new Document("_id", new Document("dayOfWeek", new Document("$dayOfWeek", "$date")));
+            d.put("countOfMessages", new Document( "$sum", 1));
+
+
+        Document s = new Document("dayOfWeek", 1);
+        AggregateIterable<Document> output = messageColl.aggregate(Arrays.asList(
+            new Document("$group", d),
+                new Document("$sort", s)
+        ));
+
+        for (Document doc : output) {
+           System.out.println(doc);
+        }
+
+        Document dd = new Document("_id", new Document("month", new Document("$month", "$date")));
+        dd.put("countOfFriendShips",new Document( "$sum", 1));
+        //dd.put("min",new Document("$min", "$month"));
+
+        Document range =new Document("$gt", java.sql.Date.valueOf(LocalDate.of(2016, 7, 1)));
+        range.put("$lt", java.sql.Date.valueOf(LocalDate.of(2016, 8, 25)));
+        Document mm =new Document("date", range);
+
+        AggregateIterable<Document> output1 = friendShipColl.aggregate(Arrays.asList(
+                    new Document("$match",mm),
+                    new Document("$group", dd)
+                ));
+
+                for (Document doc : output1) {
+                    System.out.println(doc);
                 }
-                );*/
 
 
-/*
-        Document doc = new Document ();
 
-        doc.put("name", RandomStringUtils.randomAlphanumeric(10));
-        doc.put("friends", "database123");
-        doc.put("age", age);
+        Document ddd = new Document("_id",1);
+        ddd.put("min",new Document("$min", "$viewedMovies"));
 
-        userColl.insertOne(doc);
+        Document range1 =new Document("$gt", 10 );
+        Document mmm =new Document("friendsCount", range1);
 
-        System.out.println("size -> " + names.size());
 
-    FindIterable<Document> iterable = db.getCollection("user").find();
+        AggregateIterable<Document> output2 = userColl.aggregate(Arrays.asList(
+                          new Document("$match",mmm),
+                          new Document("$group", ddd)
+                      ));
 
-        iterable.forEach((Block<? super Document>) (Document document) -> {
-                        System.out.println(
-                                document.get("name") + "  " +
-                                document.get("friends")+ "   " +
-                                document.get("age")
-                        );
-                    }
-        );*/
-
+                      for (Document doc : output2) {
+                          System.out.println(doc);
+                      }
     }
 
-    private static List initUserCollection (List<User> coll, int wordLength, int capacity) {
-        User u ;
-        for (int i=0 ; i <= capacity; i++){
-            int age = r.nextInt(100);
-            u = new User(RandomStringUtils.randomAlphanumeric(wordLength),age);
-            coll.add(u);
-        }
-
-        initFriendShipForUserCollection(coll, capacity);
-        initMessagesForUserCollection(coll);
-
-        return coll;
-    }
-
-    private static void initFriendShipForUserCollection (List<User> users, int capacity) {
-        int maxNumberOfFriends = r.nextInt(15);
-
-        users.forEach((user)->{
-            List<Integer> alreadyAddedFriends = new ArrayList<Integer>();
-            List<FriendShip> friends = new ArrayList<FriendShip>();
-
-            for(int i = 0; maxNumberOfFriends >= i; i++){
-
-                int friendKey = r.nextInt(capacity);
-                LocalDate date = null;
-                int month = 1;
-                int day = 1;
-                if(alreadyAddedFriends.contains(friendKey)){
-                  i--;
-                }else{
-
-                    month = r.nextInt(12) + 1;
-                    day = r.nextInt(28) + 1;
-                    date = LocalDate.of(2016, month, day);
 
 
-                    alreadyAddedFriends.add(friendKey);
-                    User newFriend = users.get(friendKey);
-                    String name = newFriend.getName();
-
-                    friends.add(new FriendShip(name, date));
-                    user.setFriends(friends);
-                }
-            }
-        });
-    }
-
-    private static void initMessagesForUserCollection (List<User> users) {
-        int maxNumberOfMessages = r.nextInt(25);
-
-        users.forEach((user)->{
-
-            List<Message> messages = new ArrayList<Message>();
-            LocalDate date = null;
-            String msg = "";
-            int month = 1;
-            int day = 1;
-
-            for(int i = 0; maxNumberOfMessages >= i; i++){
-                month = r.nextInt(12) + 1;
-                day = r.nextInt(28) + 1;
-                date = LocalDate.of(2016, month, day);
-
-                msg = RandomStringUtils.randomAlphanumeric(r.nextInt(100));
-
-                messages.add(new Message(msg, date));
-            }
-        });
-    }
-
-    private static List initMovieCollection (List<Movie> coll, int wordLength, long capacity) {
-        Movie m ;
-        for (int i=0 ; i <= capacity; i++){
-            m = new Movie(RandomStringUtils.randomAlphanumeric(wordLength), r.nextInt(100));
-            coll.add(m);
-        }
-        return coll;
-    }
-
-    private static List initTrackCollection (List<Track> coll, int wordLength, long capacity) {
-        Track t ;
-        for (int i=0 ; i <= capacity; i++){
-            t = new Track(RandomStringUtils.randomAlphanumeric(wordLength), r.nextInt(100));
-            coll.add(t);
-        }
-        return coll;
-    }
-
-    private static void createAndFillTrackTable (MongoCollection dbColl, List<Track> tracks) {
-
-        List<Document> data = new ArrayList<Document>();
-
-        tracks.forEach(
-                (track)->{
-                    Document doc = new Document();
-
-                    doc.put("title",track.getTitle());
-                    doc.put("likes",track.getLikes());
-                    data.add(doc);
-                });
-        dbColl.insertMany(data);
-    }
-
-    private static void createAndFillMovieTable (MongoCollection dbColl, List<Movie> movies) {
-
-        List<Document> data = new ArrayList<Document>();
-
-        movies.forEach(
-                (movie)->{
-                    Document doc = new Document();
-
-                    doc.put("title",movie.getTitle());
-                    doc.put("likes",movie.getLikes());
-                    data.add(doc);
-                });
-        dbColl.insertMany(data);
-    }
-
-    private static void createAndFillUserTable (MongoCollection dbColl, List<User> users,  List<Movie> movies, List<Track> tracks) {
-
-        List<Document> data = new ArrayList<Document>();
-
-        users.forEach(
-                (user)->{
-                    Document doc = new Document();
-                    doc.put("name",user.getName());
-                    doc.put("age",user.getAge());
-
-                    Document friends = new Document();
-                    List<FriendShip> myFriends = user.getFriends();
-                    for (int x = 0; x <= myFriends.size(); x++) {
-                        friends.put("name", myFriends.get(x).getFriend() );
-                        friends.put("date", myFriends.get(x).getTimestamp() );
-
-                    }
-                    doc.put("friends" ,friends);
-
-                    Document messages = new Document(user.getMessages());
-                    messages.put("messages",user.getMessages());
-
-                    doc.put("messages",messages);
-
-                    data.add(doc);
-                });
-        dbColl.insertMany(data);
-    }
 }
